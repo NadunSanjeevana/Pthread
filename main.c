@@ -11,7 +11,7 @@ void generate_report();
 
 int main() {
     unsigned long serial_runtime, mut_t1_runtime, mut_t2_runtime, mut_t4_runtime, mut_t8_runtime, rw_t1_runtime, rw_t2_runtime, rw_t4_runtime, rw_t8_runtime;
-    const int N = 10;
+    const int N = 385;
 
     int case_num = 1;
     FILE* fp;

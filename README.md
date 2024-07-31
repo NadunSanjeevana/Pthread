@@ -31,3 +31,11 @@ To compile the project, use the provided `Makefile`. Run the following command i
 ```sh
 make
 ```
+
+### Run the Project
+
+To run the project, use the newly created `run.exe`. Run the following command in the terminal:
+
+```sh
+./run
+```

@@ -5,7 +5,7 @@
 CC = gcc
 CFLAGS = -pthread -Wall -O2
 OBJ = linked_list.o serial.o mutex.o rw_lock.o main.o
-EXEC = linked_list_test
+EXEC = run
 
 .PHONY: all clean
 
