@@ -53,5 +53,5 @@ unsigned long test_serial_run(int case_num) {
     clock_t end = clock();
     FreeList();
 
-    return (unsigned long)(end - start);
+    return (unsigned long)((end - start) * 1000000 / CLOCKS_PER_SEC);
 }

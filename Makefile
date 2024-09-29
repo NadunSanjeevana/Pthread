@@ -4,7 +4,7 @@
 
 CC = gcc
 CFLAGS = -pthread -Wall -O2
-OBJ = linked_list.o serial.o mutex.o rw_lock.o main.o
+OBJ = utils.o linked_list.o serial.o mutex.o rw_lock.o main.o
 EXEC = run
 
 .PHONY: all clean
@@ -17,8 +17,12 @@ output_dir:
 $(EXEC): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
+utils.o: utils.c utils.h
+	$(CC) $(CFLAGS) -c $<
+
 linked_list.o: linked_list.c linked_list.h
 	$(CC) $(CFLAGS) -c $<
+
 
 serial.o: serial.c serial.h linked_list.h
 	$(CC) $(CFLAGS) -c $<
@@ -35,3 +39,4 @@ main.o: main.c linked_list.h serial.h mutex.h rw_lock.h
 clean:
 	del /Q $(OBJ) $(EXEC)
 	if exist output rd /S /Q output
+
