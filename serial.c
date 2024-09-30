@@ -1,16 +1,15 @@
-// serial_optimized.c
-#include "linked_list.h"
-#include <stdlib.h>
-#include <time.h>
-#include "utils.h"
-
+#include "linked_list.h"   
+#include "utils.h"         
+#include <stdlib.h>        
+#include <time.h>          
+#include <stdio.h>         
 
 
 unsigned long test_serial_run(int case_num) {
-    int m = 10000; // Number of operations
+    int m = 10000; 
     float mMember, mInsert, mDelete;
 
-    // Determine operation proportions based on case number
+    
     switch(case_num) {
         case 1:
             mMember = 0.99;
@@ -33,54 +32,58 @@ unsigned long test_serial_run(int case_num) {
             mDelete = 0.10;
     }
 
+    
     int memberOps = m * mMember;
     int insertOps = m * mInsert;
     int deleteOps = m * mDelete;
 
-    // Allocate memory for operations and corresponding values
-    char* operations = malloc(m * sizeof(char));  // Operations array
-    int* values = malloc(m * sizeof(int));        // Corresponding values array
+    // Allocate memory for the operations array and corresponding values array
+    char* operations = malloc(m * sizeof(char));  
+    int* values = malloc(m * sizeof(int));        
 
-    // Fill operations array
+    
     for (int i = 0; i < memberOps; i++) operations[i] = 'M';
     for (int i = memberOps; i < memberOps + insertOps; i++) operations[i] = 'I';
     for (int i = memberOps + insertOps; i < m; i++) operations[i] = 'D';
 
-    // Fill values array with random values
+    
     for (int i = 0; i < m; i++) values[i] = rand() % 65536;
 
-    // Shuffle the operations and values using Durstenfeld shuffle
+    // Shuffle the operations and corresponding values
     shuffle_operations(operations, values, m);
 
-    InitializeList(1000); // Initial population with 1000 unique random values
+    
+    InitializeList(1000); 
 
-    clock_t start = clock();  // Start timing the operations
+    
+    clock_t start = clock();  
 
-    // Sequentially perform each operation based on the shuffled order
+    // Sequentially perform each operation
     for (int i = 0; i < m; i++) {
         int value = values[i];
         switch (operations[i]) {
             case 'M':
-                Member(value);  // Member operation (no lock needed in serial)
+                Member(value);  
                 break;
             case 'I':
-                while (!Insert(value)) {  // Insert operation (no lock needed in serial)
-                    value = rand() % 65536;
+                while (!Insert(value)) {  
+                    value = rand() % 65536;  
                 }
                 break;
             case 'D':
-                Delete(value);  // Delete operation (no lock needed in serial)
+                Delete(value);  
                 break;
         }
     }
 
-    clock_t end = clock();  // End timing the operations
-    FreeList();  // Free the linked list memory
+    
+    clock_t end = clock();  
 
-    // Free dynamically allocated arrays
+    
+    FreeList();
     free(operations);
     free(values);
 
-    // Return the time in microseconds
+    // Return the time taken for the operations in microseconds
     return (unsigned long)((end - start) * 1000000 / CLOCKS_PER_SEC);
 }

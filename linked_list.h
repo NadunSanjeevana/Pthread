@@ -1,4 +1,3 @@
-// linked_list.h
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
@@ -13,4 +12,4 @@ int Delete(int value);
 void InitializeList(int n);
 void FreeList();
 
-#endif // LINKED_LIST_H
+#endif 

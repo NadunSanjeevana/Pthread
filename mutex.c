@@ -11,9 +11,9 @@ pthread_mutex_t mutex;
 typedef struct {
     long rank;
     int case_num;
-    char* operations;  // Operation list for this thread
-    int* values;       // Corresponding values for the operations
-    int num_operations; // Number of operations to perform
+    char* operations;  
+    int* values;       
+    int num_operations; 
 } thread_args;
 
 // Function to perform operations using a mutex lock
@@ -27,15 +27,15 @@ void* mutex_operation(void* args) {
         pthread_mutex_lock(&mutex);  // Lock the mutex before accessing the list
         switch (my_args->operations[i]) {
             case 'M':
-                Member(value);  // Member operation
+                Member(value);  
                 break;
             case 'I':
-                while (!Insert(value)) {  // Insert operation (ensure uniqueness)
-                    value = rand() % 65536;  // Generate a new value until insertion is successful
+                while (!Insert(value)) {  
+                    value = rand() % 65536;  
                 }
                 break;
             case 'D':
-                Delete(value);  // Delete operation
+                Delete(value);  
                 break;
         }
         pthread_mutex_unlock(&mutex);  // Unlock the mutex after the operation
@@ -46,9 +46,9 @@ void* mutex_operation(void* args) {
 // Function to test mutex performance with shuffled operations
 unsigned long test_mutex_run(int case_num, int num_threads) {
     pthread_t* thread_handles = malloc(num_threads * sizeof(pthread_t));
-    pthread_mutex_init(&mutex, NULL);  // Initialize the mutex
+    pthread_mutex_init(&mutex, NULL);  
 
-    int m = 10000;  // Total number of operations
+    int m = 10000;  
     float mMember, mInsert, mDelete;
 
     // Set operation ratios based on the case number
@@ -79,38 +79,44 @@ unsigned long test_mutex_run(int case_num, int num_threads) {
     int deleteOps = m * mDelete;
 
     // Allocate operation arrays
-    char* operations = malloc(m * sizeof(char));  // Operations array
-    int* values = malloc(m * sizeof(int));  // Corresponding values array
+    char* operations = malloc(m * sizeof(char));  
+    int* values = malloc(m * sizeof(int));  
 
-    // Fill the operations array with the respective operations
+    
     for (int i = 0; i < memberOps; i++) operations[i] = 'M';
     for (int i = memberOps; i < memberOps + insertOps; i++) operations[i] = 'I';
     for (int i = memberOps + insertOps; i < m; i++) operations[i] = 'D';
 
-    // Fill the values array with random values
+    
     for (int i = 0; i < m; i++) values[i] = rand() % 65536;
 
     // Shuffle the operations and corresponding values using Durstenfeld shuffle
     shuffle_operations(operations, values, m);
 
-    InitializeList(1000);  // Initialize the list with 1000 random values
+    InitializeList(1000);  
 
-    clock_t start = clock();  // Start timing the operations
+    clock_t start = clock();  
 
     // Allocate thread arguments and assign operations to threads
     thread_args* args = malloc(num_threads * sizeof(thread_args));
     int operations_per_thread = m / num_threads;
-    int remaining_operations = m % num_threads;  // Handle remainder for uneven division
+    int remaining_operations = m % num_threads;  
 
-    // Assign operations to each thread
+    
+    int start_index = 0;
     for (long thread = 0; thread < num_threads; thread++) {
         args[thread].rank = thread;
         args[thread].case_num = case_num;
 
         // Each thread gets equal operations, with the remainder distributed
         args[thread].num_operations = operations_per_thread + (thread < remaining_operations ? 1 : 0);
-        args[thread].operations = &operations[thread * operations_per_thread];
-        args[thread].values = &values[thread * operations_per_thread];
+
+        // Set the correct start index for the operations and values
+        args[thread].operations = &operations[start_index];
+        args[thread].values = &values[start_index];
+
+        // Move the start_index forward by the number of operations assigned to this thread
+        start_index += args[thread].num_operations;
 
         pthread_create(&thread_handles[thread], NULL, mutex_operation, (void*)&args[thread]);
     }
@@ -120,15 +126,15 @@ unsigned long test_mutex_run(int case_num, int num_threads) {
         pthread_join(thread_handles[thread], NULL);
     }
 
-    clock_t end = clock();  // End timing the operations
+    clock_t end = clock();  
 
-    FreeList();  // Free the linked list memory
+    FreeList();  
 
-    pthread_mutex_destroy(&mutex);  // Destroy the mutex
-    free(thread_handles);  // Free thread handles memory
-    free(args);  // Free thread arguments memory
-    free(operations);  // Free operations array
-    free(values);  // Free values array
+    pthread_mutex_destroy(&mutex);  
+    free(thread_handles);  
+    free(args);  
+    free(operations);  
+    free(values);  
 
     // Return the time in microseconds
     return (unsigned long)((end - start) * 1000000 / CLOCKS_PER_SEC);

@@ -9,34 +9,35 @@ pthread_rwlock_t rwlock;
 typedef struct {
     long rank;
     int case_num;
-    char* operations;  // Operation list for this thread
-    int* values;       // Corresponding values for the operations
-    int num_operations; // Number of operations to perform
+    char* operations;  
+    int* values;       
+    int num_operations; 
 } thread_args;
 
+// Thread function for handling operations using read-write locks
 void* rwlock_operation(void* args) {
     thread_args* my_args = (thread_args*) args;
     int num_operations = my_args->num_operations;
 
-    // Perform each operation based on the shuffled order
+    // Perform each operation in the shuffled order
     for (int i = 0; i < num_operations; i++) {
         int value = my_args->values[i];
         switch (my_args->operations[i]) {
             case 'M':
-                pthread_rwlock_rdlock(&rwlock);
-                Member(value);  // Member operation (read lock)
+                pthread_rwlock_rdlock(&rwlock);  // Read lock for Member operation
+                Member(value);
                 pthread_rwlock_unlock(&rwlock);
                 break;
             case 'I':
-                pthread_rwlock_wrlock(&rwlock);
-                while (!Insert(value)) {  // Insert operation (write lock)
-                    value = rand() % 65536;
+                pthread_rwlock_wrlock(&rwlock);  // Write lock for Insert operation
+                while (!Insert(value)) {
+                    value = rand() % 65536;  
                 }
                 pthread_rwlock_unlock(&rwlock);
                 break;
             case 'D':
-                pthread_rwlock_wrlock(&rwlock);
-                Delete(value);  // Delete operation (write lock)
+                pthread_rwlock_wrlock(&rwlock);  // Write lock for Delete operation
+                Delete(value);
                 pthread_rwlock_unlock(&rwlock);
                 break;
         }
@@ -44,15 +45,15 @@ void* rwlock_operation(void* args) {
     return NULL;
 }
 
+// Test function for performing operations using read-write lock
 unsigned long test_rw_lock_run(int case_num, int num_threads) {
-    pthread_t* thread_handles;
-    thread_handles = malloc(num_threads * sizeof(pthread_t));
-    pthread_rwlock_init(&rwlock, NULL);  // Initialize the read-write lock
+    pthread_t* thread_handles = malloc(num_threads * sizeof(pthread_t));
+    pthread_rwlock_init(&rwlock, NULL);  
 
-    int m = 10000;  // Total number of operations
+    int m = 10000;  
     float mMember, mInsert, mDelete;
 
-    // Set operation ratios based on the case number
+    
     switch(case_num) {
         case 1:
             mMember = 0.99;
@@ -80,39 +81,48 @@ unsigned long test_rw_lock_run(int case_num, int num_threads) {
     int deleteOps = m * mDelete;
 
     // Allocate memory for operations and values
-    char* operations = malloc(m * sizeof(char));  // Operations array
-    int* values = malloc(m * sizeof(int));        // Corresponding values array
+    char* operations = malloc(m * sizeof(char));
+    int* values = malloc(m * sizeof(int));
+    if (!operations || !values) {
+        perror("Failed to allocate memory");
+        exit(EXIT_FAILURE);
+    }
 
-    // Fill operations array
+    
     for (int i = 0; i < memberOps; i++) operations[i] = 'M';
     for (int i = memberOps; i < memberOps + insertOps; i++) operations[i] = 'I';
     for (int i = memberOps + insertOps; i < m; i++) operations[i] = 'D';
 
-    // Fill values array with random values
+    
     for (int i = 0; i < m; i++) values[i] = rand() % 65536;
 
-    // Shuffle the operations and corresponding values using Durstenfeld shuffle
+    // Shuffle operations and values
     shuffle_operations(operations, values, m);
 
-    InitializeList(1000);  // Initialize the list with 1000 random values
+    
+    InitializeList(1000);
 
-    clock_t start = clock();  // Start timing the operations
+    clock_t start = clock();  
 
-    // Allocate thread arguments and assign operations to threads
+    // Allocate thread arguments and assign operations
     thread_args* args = malloc(num_threads * sizeof(thread_args));
     int operations_per_thread = m / num_threads;
-    int remaining_operations = m % num_threads;  // Handle remainder for uneven division
+    int remaining_operations = m % num_threads;
+    int start_index = 0;  
 
-    // Assign operations to each thread
+    // Assign work to threads
     for (long thread = 0; thread < num_threads; thread++) {
         args[thread].rank = thread;
         args[thread].case_num = case_num;
 
-        // Each thread gets equal operations, with the remainder distributed
+        // Handle uneven distribution of operations
         args[thread].num_operations = operations_per_thread + (thread < remaining_operations ? 1 : 0);
-        args[thread].operations = &operations[thread * operations_per_thread];
-        args[thread].values = &values[thread * operations_per_thread];
+        args[thread].operations = &operations[start_index];
+        args[thread].values = &values[start_index];
         
+        start_index += args[thread].num_operations;  
+
+        // Create the thread
         pthread_create(&thread_handles[thread], NULL, rwlock_operation, (void*)&args[thread]);
     }
 
@@ -121,16 +131,17 @@ unsigned long test_rw_lock_run(int case_num, int num_threads) {
         pthread_join(thread_handles[thread], NULL);
     }
 
-    clock_t end = clock();  // End timing the operations
+    clock_t end = clock();  
 
-    FreeList();  // Free the linked list memory
+    FreeList();  
 
+    // Clean up
     pthread_rwlock_destroy(&rwlock);  // Destroy the read-write lock
-    free(thread_handles);  // Free thread handles memory
-    free(args);  // Free thread arguments memory
-    free(operations);  // Free operations array
-    free(values);  // Free values array
+    free(thread_handles);
+    free(args);
+    free(operations);
+    free(values);
 
-    // Return the time in microseconds
+    // Return the time taken in microseconds
     return (unsigned long)((end - start) * 1000000 / CLOCKS_PER_SEC);
 }
