@@ -1,10 +1,10 @@
 Test Type, Average Runtime (ms), Standard Deviation (us), Number of Samples
-Serial, 10647.06, 1081.46, 17
-Mutex T1, 53777.78, 4308.33, 36
-Mutex T2, 31833.33, 897.53, 6
-Mutex T4, 31866.67, 1146.98, 15
-Mutex T8, 15200.00, 871.78, 10
-RW Lock T1, 27000.00, 577.35, 6
-RW Lock T2, 34333.33, 1414.21, 9
-RW Lock T4, 36571.43, 903.51, 7
-RW Lock T8, 2621.00, 0.00, 1
+Serial, 12636.36, 3656.76, 121
+Mutex T1, 63368.42, 7154.02, 19
+Mutex T2, 29162.16, 4457.08, 37
+Mutex T4, 30421.05, 3631.96, 38
+Mutex T8, 17200.00, 1469.69, 5
+RW Lock T1, 29038.46, 4799.69, 26
+RW Lock T2, 37166.67, 3746.51, 78
+RW Lock T4, 36333.33, 471.40, 3
+RW Lock T8, 2468.00, 0.00, 1

@@ -2,65 +2,86 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# File paths
+# File paths for the three cases
 files = ["output/Case_1.csv", "output/Case_2.csv", "output/Case_3.csv"]
 
-# Initialize a list to hold DataFrames
-dfs = []
-
-# Read each CSV file into a DataFrame
-for file in files:
-    df = pd.read_csv(file)
-    dfs.append(df)
-
 # Create separate graphs for each case
-for i, df in enumerate(dfs):
-    combined_data = {}
+for i, file in enumerate(files):
+    # Read the data from the CSV file
+    df = pd.read_csv(file)
 
-    # Process each DataFrame
-    for index, row in df.iterrows():
-        test_type = row['Test Type']
-        avg_runtime = row[' Average Runtime (ms)']
+    # Filter the necessary columns
+    test_types = df['Test Type']
+    avg_runtimes = df[' Average Runtime (ms)']
 
-        # Extract the number of threads for Mutex and RW Lock
-        if "Mutex" in test_type:
-            # Get the number of threads (T1, T2, etc.)
-            threads = test_type.split()[-1]
-            test_name = f'Mutex {threads}'
-        elif "RW Lock" in test_type:
-            # Get the number of threads (T1, T2, etc.)
-            threads = test_type.split()[-1]
-            test_name = f'RW Lock {threads}'
-        else:
-            threads = '1'  # Serial case
-            test_name = 'Serial'
+    # Prepare the thread counts and associated runtimes
+    thread_counts = [1, 2, 4, 8]
+    serial_times = [0] * len(thread_counts)
+    mutex_times = [0] * len(thread_counts)
+    rwlock_times = [0] * len(thread_counts)
 
-        # Store the runtime in the combined_data dictionary
-        if test_name not in combined_data:
-            combined_data[test_name] = [avg_runtime]
-        else:
-            combined_data[test_name].append(avg_runtime)
+    for j, test in enumerate(test_types):
+        if 'T1' in test:
+            thread_counts[0] = 1
+            if 'Mutex' in test:
+                mutex_times[0] = avg_runtimes[j]
+            elif 'RW Lock' in test:
+                rwlock_times[0] = avg_runtimes[j]
+        elif 'T2' in test:
+            thread_counts[1] = 2
+            if 'Mutex' in test:
+                mutex_times[1] = avg_runtimes[j]
+            elif 'RW Lock' in test:
+                rwlock_times[1] = avg_runtimes[j]
+        elif 'T4' in test:
+            thread_counts[2] = 4
+            if 'Mutex' in test:
+                mutex_times[2] = avg_runtimes[j]
+            elif 'RW Lock' in test:
+                rwlock_times[2] = avg_runtimes[j]
+        elif 'T8' in test:
+            thread_counts[3] = 8
+            if 'Mutex' in test:
+                mutex_times[3] = avg_runtimes[j]
+            elif 'RW Lock' in test:
+                rwlock_times[3] = avg_runtimes[j]
+        elif 'Serial' in test:
+            serial_times[0] = avg_runtimes[j]  # Serial time is only for T1
 
-    # Prepare data for plotting
-    labels = list(combined_data.keys())
-    bar_data = [combined_data[label] for label in labels]
-
-    # Set the number of bars and their positions
+    # Plotting the data
     bar_width = 0.25
-    x = np.arange(len(bar_data[0]))  # Number of samples per test type
+    x = np.arange(len(thread_counts))  # Thread counts as x-axis
 
-    # Create a multibar chart for the current case
-    plt.figure(figsize=(12, 6))
-    for j, data in enumerate(bar_data):
-        plt.bar(x + (j - 1) * bar_width, data,
-                width=bar_width, label=labels[j])
+    # Create the figure
+    plt.figure(figsize=(10, 6))
 
-    # Adding labels and title
-    plt.xlabel('Number of Threads')
-    plt.ylabel('Average Runtime (ms)')
-    plt.title(f'Performance Comparison for Case {i + 1}')
-    # Assuming consistent thread counts
-    plt.xticks(x, [f'T{i + 1}' for i in range(len(bar_data[0]))])
+    # Plot bars for thread count 1 (three bars: Serial, Mutex, RW Lock)
+    plt.bar(x[0], serial_times[0], width=bar_width,
+            label='Serial', color='blue')
+    plt.bar(x[0] + bar_width, mutex_times[0],
+            width=bar_width, label='Mutex', color='orange')
+    plt.bar(x[0] + 2 * bar_width, rwlock_times[0],
+            width=bar_width, label='RW Lock', color='gray')
+
+    # Plot bars for thread counts 2, 4, and 8 (two bars: Mutex, RW Lock)
+    plt.bar(x[1] + bar_width, mutex_times[1], width=bar_width, color='orange')
+    plt.bar(x[1] + 2 * bar_width, rwlock_times[1],
+            width=bar_width, color='gray')
+
+    plt.bar(x[2] + bar_width, mutex_times[2], width=bar_width, color='orange')
+    plt.bar(x[2] + 2 * bar_width, rwlock_times[2],
+            width=bar_width, color='gray')
+
+    plt.bar(x[3] + bar_width, mutex_times[3], width=bar_width, color='orange')
+    plt.bar(x[3] + 2 * bar_width, rwlock_times[3],
+            width=bar_width, color='gray')
+
+    # Add titles and labels
+    plt.xlabel('Thread Count')
+    plt.ylabel('Execution Time (ms)')
+    plt.title(f'Execution Time Comparison - Case {i + 1}')
+    # Correct position of x-ticks for clarity
+    plt.xticks(x + bar_width, thread_counts)
     plt.legend()
 
     # Show the plot
